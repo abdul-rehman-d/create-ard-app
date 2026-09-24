@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { createInterface } from "node:readline/promises";
@@ -87,6 +87,15 @@ function run(command, args, cwd) {
   }
 }
 
+/** @param {string} projectDirectory */
+function commitGeneratedProject(projectDirectory) {
+  if (!existsSync(path.join(projectDirectory, ".git"))) return;
+
+  console.log("\nCommitting the completed starter...\n");
+  run("git", ["add", "--all"], projectDirectory);
+  run("git", ["commit", "-m", "Set up Expo and Convex app"], projectDirectory);
+}
+
 /** @param {string | undefined} providedDirectory */
 async function getDirectory(providedDirectory) {
   if (providedDirectory) return providedDirectory;
@@ -135,6 +144,12 @@ export async function main(argv = process.argv.slice(2)) {
   const [devCommand, devArgs] = commandFor(packageManager, "expo-install-dev", developmentPackages);
   run(devCommand, devArgs, projectDirectory);
 
+  if (!options.skipConvex) {
+    console.log("\nConnect this app to a Convex project when prompted.\n");
+    const [convexCommand, convexArgs] = commandFor(packageManager, "convex");
+    run(convexCommand, convexArgs, projectDirectory);
+  }
+
   const packageJson = JSON.parse(readFileSync(path.join(projectDirectory, "package.json"), "utf8"));
   const generatedPackagesToRemove = [
     "expo-device",
@@ -165,10 +180,12 @@ export async function main(argv = process.argv.slice(2)) {
   run(biomeCommand, biomeArgs, projectDirectory);
 
   if (!options.skipConvex) {
-    console.log("\nConnect this app to a Convex project when prompted.\n");
+    console.log("\nSyncing the starter functions with Convex...\n");
     const [convexCommand, convexArgs] = commandFor(packageManager, "convex");
     run(convexCommand, convexArgs, projectDirectory);
   }
+
+  commitGeneratedProject(projectDirectory);
 
   const relativeDirectory = path.relative(process.cwd(), projectDirectory) || ".";
   const startCommand = packageManager === "npm" ? "npm run start" : `${packageManager} start`;
