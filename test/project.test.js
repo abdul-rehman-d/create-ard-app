@@ -12,6 +12,15 @@ import {
   patchPackageJson,
 } from "../src/project.js";
 
+const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+
+test("git installs do not require package lifecycle scripts", () => {
+  for (const script of ["prepack", "prepare", "prepublish"]) {
+    assert.equal(packageJson.scripts[script], undefined);
+  }
+  assert.equal(packageJson.scripts.prepublishOnly, "npm run verify");
+});
+
 test("detectPackageManager understands npm user agents", () => {
   assert.equal(detectPackageManager("pnpm/10.0.0 npm/? node/v22"), "pnpm");
   assert.equal(detectPackageManager("bun/1.2.0 npm/? node/v22"), "bun");

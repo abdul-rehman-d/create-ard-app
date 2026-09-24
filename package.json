@@ -17,7 +17,8 @@
     "check": "biome check .",
     "typecheck": "tsc --noEmit",
     "test": "node --test",
-    "prepack": "npm run check && npm run typecheck && npm test"
+    "verify": "npm run check && npm run typecheck && npm test",
+    "prepublishOnly": "npm run verify"
   },
   "keywords": [
     "expo",
