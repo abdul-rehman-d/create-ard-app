@@ -8,12 +8,13 @@ import {
   applyTemplate,
   assertPackageManager,
   commandFor,
+  convexPackages,
   detectPackageManager,
   developmentPackages,
   ensureAvailableTarget,
+  expoPackages,
   patchAppJson,
   patchPackageJson,
-  runtimePackages,
 } from "./project.js";
 
 const packagePath = fileURLToPath(new URL("../package.json", import.meta.url));
@@ -115,9 +116,21 @@ export async function main(argv = process.argv.slice(2)) {
   const [createCommand, createArgs] = commandFor(packageManager, "create", [projectDirectory]);
   run(createCommand, createArgs, process.cwd());
 
-  console.log("\nInstalling the app dependencies...\n");
-  const [installCommand, installArgs] = commandFor(packageManager, "expo-install", runtimePackages);
-  run(installCommand, installArgs, projectDirectory);
+  console.log("\nInstalling the Expo app dependencies...\n");
+  const [expoInstallCommand, expoInstallArgs] = commandFor(
+    packageManager,
+    "expo-install",
+    expoPackages,
+  );
+  run(expoInstallCommand, expoInstallArgs, projectDirectory);
+
+  console.log("\nInstalling Convex...\n");
+  const [convexInstallCommand, convexInstallArgs] = commandFor(
+    packageManager,
+    "add",
+    convexPackages,
+  );
+  run(convexInstallCommand, convexInstallArgs, projectDirectory);
 
   const [devCommand, devArgs] = commandFor(packageManager, "expo-install-dev", developmentPackages);
   run(devCommand, devArgs, projectDirectory);

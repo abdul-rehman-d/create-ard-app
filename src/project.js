@@ -5,11 +5,12 @@ import { fileURLToPath } from "node:url";
 const PACKAGE_MANAGERS = new Set(["npm", "pnpm", "yarn", "bun"]);
 
 /** @typedef {"npm" | "pnpm" | "yarn" | "bun"} PackageManager */
-/** @typedef {"create" | "expo-install" | "expo-install-dev" | "remove" | "convex" | "biome"} CommandAction */
+/** @typedef {"create" | "add" | "expo-install" | "expo-install-dev" | "remove" | "convex" | "biome"} CommandAction */
 /** @typedef {[string, string[]]} Command */
 
-export const runtimePackages = [
-  "convex",
+export const convexPackages = ["convex"];
+
+export const expoPackages = [
   "@react-native-async-storage/async-storage",
   "@react-native-community/netinfo",
   "react-native-safe-area-context",
@@ -65,11 +66,18 @@ export function commandFor(packageManager, action, values = []) {
     };
     const expoPrefix = expoCommands[packageManager];
     const devFlag = action === "expo-install-dev" ? ["--dev"] : [];
-    const packageManagerArgs = packageManager === "pnpm" ? ["--", "--allow-build=esbuild"] : [];
-    return [
-      expoPrefix[0],
-      [...expoPrefix[1], "install", ...devFlag, ...values, ...packageManagerArgs],
-    ];
+    return [expoPrefix[0], [...expoPrefix[1], "install", ...devFlag, ...values]];
+  }
+
+  if (action === "add") {
+    /** @type {Record<PackageManager, Command>} */
+    const commands = {
+      npm: ["npm", ["install", ...values]],
+      pnpm: ["pnpm", ["--allow-build=esbuild", "add", ...values]],
+      yarn: ["yarn", ["add", ...values]],
+      bun: ["bun", ["add", ...values]],
+    };
+    return commands[packageManager];
   }
 
   if (action === "remove") {

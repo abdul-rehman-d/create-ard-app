@@ -6,8 +6,10 @@ import test from "node:test";
 import { parseArgs } from "../src/cli.js";
 import {
   commandFor,
+  convexPackages,
   detectPackageManager,
   ensureAvailableTarget,
+  expoPackages,
   patchAppJson,
   patchPackageJson,
 } from "../src/project.js";
@@ -44,22 +46,34 @@ test("commandFor always requests the latest Expo scaffold", () => {
   ]);
 });
 
-test("pnpm Expo installs approve the esbuild build", () => {
-  assert.deepEqual(commandFor("pnpm", "expo-install", ["convex"]), [
+test("Convex installs separately from the Expo app dependencies", () => {
+  assert.deepEqual(convexPackages, ["convex"]);
+  assert.equal(expoPackages.includes("convex"), false);
+  assert.equal(expoPackages.length, 8);
+});
+
+test("pnpm Convex installs approve the esbuild build", () => {
+  assert.deepEqual(commandFor("pnpm", "add", ["convex"]), [
     "pnpm",
-    ["exec", "expo", "install", "convex", "--", "--allow-build=esbuild"],
-  ]);
-  assert.deepEqual(commandFor("pnpm", "expo-install-dev", ["typescript"]), [
-    "pnpm",
-    ["exec", "expo", "install", "--dev", "typescript", "--", "--allow-build=esbuild"],
+    ["--allow-build=esbuild", "add", "convex"],
   ]);
 });
 
-test("other package managers do not receive pnpm build options", () => {
-  assert.deepEqual(commandFor("npm", "expo-install", ["convex"]), [
-    "npx",
-    ["expo", "install", "convex"],
+test("pnpm Expo installs remain separate from Convex", () => {
+  assert.deepEqual(commandFor("pnpm", "expo-install", ["@expo/ui"]), [
+    "pnpm",
+    ["exec", "expo", "install", "@expo/ui"],
   ]);
+  assert.deepEqual(commandFor("pnpm", "expo-install-dev", ["typescript"]), [
+    "pnpm",
+    ["exec", "expo", "install", "--dev", "typescript"],
+  ]);
+});
+
+test("other package managers install Convex directly", () => {
+  assert.deepEqual(commandFor("npm", "add", ["convex"]), ["npm", ["install", "convex"]]);
+  assert.deepEqual(commandFor("yarn", "add", ["convex"]), ["yarn", ["add", "convex"]]);
+  assert.deepEqual(commandFor("bun", "add", ["convex"]), ["bun", ["add", "convex"]]);
 });
 
 test("project directory names are valid Expo slugs", () => {
