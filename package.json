@@ -1,0 +1,38 @@
+{
+  "name": "create-expo-convex-app",
+  "version": "0.1.0",
+  "description": "Create a native-first Expo app with Convex, NativeWind, TanStack Form, and Biome.",
+  "type": "module",
+  "bin": {
+    "create-expo-convex-app": "./bin/create-expo-convex-app.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "template"
+  ],
+  "scripts": {
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "prepack": "npm run check && npm run typecheck && npm test"
+  },
+  "keywords": [
+    "expo",
+    "react-native",
+    "convex",
+    "nativewind",
+    "scaffold"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.0"
+  }
+}
