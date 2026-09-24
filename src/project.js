@@ -65,7 +65,11 @@ export function commandFor(packageManager, action, values = []) {
     };
     const expoPrefix = expoCommands[packageManager];
     const devFlag = action === "expo-install-dev" ? ["--dev"] : [];
-    return [expoPrefix[0], [...expoPrefix[1], "install", ...devFlag, ...values]];
+    const packageManagerArgs = packageManager === "pnpm" ? ["--", "--allow-build=esbuild"] : [];
+    return [
+      expoPrefix[0],
+      [...expoPrefix[1], "install", ...devFlag, ...values, ...packageManagerArgs],
+    ];
   }
 
   if (action === "remove") {

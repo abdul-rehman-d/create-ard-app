@@ -44,6 +44,24 @@ test("commandFor always requests the latest Expo scaffold", () => {
   ]);
 });
 
+test("pnpm Expo installs approve the esbuild build", () => {
+  assert.deepEqual(commandFor("pnpm", "expo-install", ["convex"]), [
+    "pnpm",
+    ["exec", "expo", "install", "convex", "--", "--allow-build=esbuild"],
+  ]);
+  assert.deepEqual(commandFor("pnpm", "expo-install-dev", ["typescript"]), [
+    "pnpm",
+    ["exec", "expo", "install", "--dev", "typescript", "--", "--allow-build=esbuild"],
+  ]);
+});
+
+test("other package managers do not receive pnpm build options", () => {
+  assert.deepEqual(commandFor("npm", "expo-install", ["convex"]), [
+    "npx",
+    ["expo", "install", "convex"],
+  ]);
+});
+
 test("project directory names are valid Expo slugs", () => {
   assert.throws(() => ensureAvailableTarget("/tmp/my.app"), /letters, numbers/);
 });
