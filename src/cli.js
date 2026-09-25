@@ -23,6 +23,47 @@ import {
 
 const packagePath = fileURLToPath(new URL("../package.json", import.meta.url));
 const { version } = JSON.parse(readFileSync(packagePath, "utf8"));
+const CLI_NAME = "create-ard-app";
+const colors = {
+  cyan: "\u001b[36m",
+  green: "\u001b[32m",
+  red: "\u001b[31m",
+  reset: "\u001b[0m",
+};
+
+const banner = String.raw`
+   ___ _ __ ___  __ _| |_ ___        __ _ _ __ __| |       __ _ _ __  _ __
+  / __| '__/ _ \/ _${"`"} | __/ _ \_____ / _${"`"} | '__/ _${"`"} |_____ / _${"`"} | '_ \| '_ \
+ | (__| | |  __/ (_| | ||  __/_____| (_| | | | (_| |_____| (_| | |_) | |_) |
+  \___|_|  \___|\__,_|\__\___|      \__,_|_|  \__,_|      \__,_| .__/| .__/
+                                                                |_|   |_|
+`;
+
+/** @param {string} value @param {keyof typeof colors} tone */
+function colorize(value, tone) {
+  if (!process.stdout.isTTY || process.env.NO_COLOR !== undefined) return value;
+  return `${colors[tone]}${value}${colors.reset}`;
+}
+
+export function printBanner() {
+  process.stdout.write(`${colorize(banner, "cyan")}\n`);
+}
+
+/** @param {string} message @param {"cyan" | "green" | "red"} tone */
+export function printBox(message, tone = "cyan") {
+  const content = `[${CLI_NAME}] ${message}`;
+  const border = "─".repeat(content.length + 2);
+  const box = `┌${border}┐\n│ ${content} │\n└${border}┘`;
+  const output = `${colorize(box, tone)}\n`;
+  if (tone === "red") process.stderr.write(`\n${output}`);
+  else process.stdout.write(`\n${output}`);
+}
+
+/** @param {unknown} error */
+export function printError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  printBox(`Error: ${message}`, "red");
+}
 
 /**
  * @typedef {object} CliOptions
@@ -35,10 +76,10 @@ const { version } = JSON.parse(readFileSync(packagePath, "utf8"));
 
 function printHelp() {
   console.log(`
-create-expo-convex-app ${version}
+create-ard-app ${version}
 
 Usage:
-  create-expo-convex-app [directory] [options]
+  create-ard-app [directory] [options]
 
 Options:
   --package-manager <npm|pnpm|yarn|bun>  Override package-manager detection
@@ -95,7 +136,7 @@ function run(command, args, cwd) {
 function commitGeneratedProject(projectDirectory) {
   if (!existsSync(path.join(projectDirectory, ".git"))) return;
 
-  console.log("\nCommitting the completed starter...\n");
+  printBox("Committing the completed starter...");
   run("git", ["add", "--all"], projectDirectory);
   run("git", ["commit", "-m", "Set up Expo and Convex app"], projectDirectory);
 }
@@ -108,7 +149,7 @@ async function getDirectory(providedDirectory) {
   }
 
   const prompt = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await prompt.question("What is your app named? ");
+  const answer = await prompt.question(`[${CLI_NAME}] What is your app named? `);
   prompt.close();
   if (!answer.trim()) throw new Error("A project directory is required.");
   return answer.trim();
@@ -119,13 +160,14 @@ export async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   if (options.help) return printHelp();
   if (options.version) return console.log(version);
+  printBanner();
 
   const directory = await getDirectory(options.directory);
   const projectDirectory = path.resolve(process.cwd(), directory);
   const packageManager = options.packageManager ?? detectPackageManager();
   ensureAvailableTarget(projectDirectory);
 
-  console.log(`\nCreating ${path.basename(projectDirectory)} with Expo and ${packageManager}...\n`);
+  printBox(`Creating ${path.basename(projectDirectory)} with Expo and ${packageManager}...`);
   const [createCommand, createArgs] = commandFor(packageManager, "create", [projectDirectory]);
   run(createCommand, createArgs, process.cwd());
 
@@ -133,7 +175,7 @@ export async function main(argv = process.argv.slice(2)) {
     run("pnpm", ["config", "set", "--location=project", "nodeLinker", "hoisted"], projectDirectory);
   }
 
-  console.log("\nSetting up NativeWind...\n");
+  printBox("Setting up NativeWind...");
   const [nativeWindCommand, nativeWindArgs] = commandFor(packageManager, "add", nativeWindPackages);
   run(nativeWindCommand, nativeWindArgs, projectDirectory);
 
@@ -149,7 +191,7 @@ export async function main(argv = process.argv.slice(2)) {
   run(tailwindCommand, tailwindArgs, projectDirectory);
   setupNativeWind(projectDirectory);
 
-  console.log("\nInstalling the Expo app dependencies...\n");
+  printBox("Installing the Expo app dependencies...");
   const [expoInstallCommand, expoInstallArgs] = commandFor(
     packageManager,
     "expo-install",
@@ -157,11 +199,11 @@ export async function main(argv = process.argv.slice(2)) {
   );
   run(expoInstallCommand, expoInstallArgs, projectDirectory);
 
-  console.log("\nInstalling the development tools...\n");
+  printBox("Installing the development tools...");
   const [devCommand, devArgs] = commandFor(packageManager, "add", developmentPackages, true);
   run(devCommand, devArgs, projectDirectory);
 
-  console.log("\nInstalling Convex...\n");
+  printBox("Installing Convex...");
   const [convexInstallCommand, convexInstallArgs] = commandFor(
     packageManager,
     "add",
@@ -170,7 +212,7 @@ export async function main(argv = process.argv.slice(2)) {
   run(convexInstallCommand, convexInstallArgs, projectDirectory);
 
   if (!options.skipConvex) {
-    console.log("\nConnect this app to a Convex project when prompted.\n");
+    printBox("Connect this app to a Convex project when prompted.");
     const [convexCommand, convexArgs] = commandFor(packageManager, "convex");
     run(convexCommand, convexArgs, projectDirectory);
   }
@@ -184,7 +226,7 @@ export async function main(argv = process.argv.slice(2)) {
     run(removeCommand, removeArgs, projectDirectory);
   }
 
-  console.log("\nApplying the native-first starter...\n");
+  printBox("Applying the native-first starter...");
   applyTemplate(projectDirectory);
   patchPackageJson(projectDirectory);
   patchAppJson(projectDirectory);
@@ -192,7 +234,7 @@ export async function main(argv = process.argv.slice(2)) {
   run(biomeCommand, biomeArgs, projectDirectory);
 
   if (!options.skipConvex) {
-    console.log("\nSyncing the starter functions with Convex...\n");
+    printBox("Syncing the starter functions with Convex...");
     const [convexCommand, convexArgs] = commandFor(packageManager, "convex");
     run(convexCommand, convexArgs, projectDirectory);
   }
@@ -201,10 +243,8 @@ export async function main(argv = process.argv.slice(2)) {
 
   const relativeDirectory = path.relative(process.cwd(), projectDirectory) || ".";
   const startCommand = packageManager === "npm" ? "npm run start" : `${packageManager} start`;
-  console.log(`
-Done. Your Expo + Convex app is ready.
-
-Next steps:
+  printBox("Done. Your Expo + Convex app is ready.", "green");
+  console.log(`Next steps:
   cd ${relativeDirectory}
   ${options.skipConvex ? `${packageManager === "npm" ? "npx" : packageManager === "pnpm" ? "pnpm exec" : packageManager === "bun" ? "bunx" : "yarn"} convex dev --once\n  ` : ""}${startCommand}
 

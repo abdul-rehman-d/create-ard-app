@@ -1,10 +1,10 @@
 {
-  "name": "create-expo-convex-app",
+  "name": "create-ard-app",
   "version": "0.1.0",
   "description": "Create a native-first Expo app with Convex, NativeWind, TanStack Form, and Biome.",
   "type": "module",
   "bin": {
-    "create-expo-convex-app": "./bin/create-expo-convex-app.js"
+    "create-ard-app": "./bin/create-ard-app.js"
   },
   "files": [
     "bin",

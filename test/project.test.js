@@ -22,6 +22,11 @@ import {
 
 const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
+test("package exposes the create-ard-app CLI", () => {
+  assert.equal(packageJson.name, "create-ard-app");
+  assert.deepEqual(packageJson.bin, { "create-ard-app": "./bin/create-ard-app.js" });
+});
+
 test("git installs do not require package lifecycle scripts", () => {
   for (const script of ["prepack", "prepare", "prepublish"]) {
     assert.equal(packageJson.scripts[script], undefined);
@@ -124,7 +129,7 @@ test("project directory names are valid Expo slugs", () => {
 });
 
 test("NativeWind and starter setup replace the blank Expo scaffold", () => {
-  const directory = mkdtempSync(path.join(tmpdir(), "create-expo-convex-app-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "create-ard-app-"));
   writeFileSync(
     path.join(directory, "package.json"),
     JSON.stringify({ scripts: { web: "expo start --web", "reset-project": "reset" } }),

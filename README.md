@@ -1,11 +1,11 @@
-# create-expo-convex-app
+# create-ard-app
 
 Expo + Convex + NativeWind — a native-first app, ready in one command.
 
 ## Quick start
 
 ```sh
-pnpm dlx github:abdul-rehman-d/create-expo-convex-app my-app
+pnpm dlx github:abdul-rehman-d/create-ard-app my-app
 ```
 
 Then start it:
