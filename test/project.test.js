@@ -64,7 +64,7 @@ test("dependency groups keep NativeWind, Expo, development tools, and Convex sep
   assert.deepEqual(convexPackages, ["convex"]);
   assert.deepEqual(nativeWindPackages, [
     "nativewind@4.2.7",
-    "react-native-reanimated@~4.5.1",
+    "react-native-reanimated@4.5.1",
     "react-native-worklets@0.10.1",
     "react-native-safe-area-context@~5.7.0",
   ]);
@@ -136,6 +136,7 @@ test("NativeWind and starter setup replace the blank Expo scaffold", () => {
     JSON.stringify({
       expo: {
         name: "demo",
+        slug: "demo-app",
         web: { output: "static" },
         plugins: [["expo-splash-screen", { image: "splash.png" }]],
       },
@@ -147,6 +148,8 @@ test("NativeWind and starter setup replace the blank Expo scaffold", () => {
   assert.equal(nativeWindAppJson.expo.web.bundler, "metro");
   assert.equal(existsSync(path.join(directory, "babel.config.js")), true);
   assert.equal(existsSync(path.join(directory, "nativewind-env.d.ts")), true);
+  const tsconfig = JSON.parse(readFileSync(path.join(directory, "tsconfig.json"), "utf8"));
+  assert.deepEqual(tsconfig.include, ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"]);
 
   applyTemplate(directory);
   patchPackageJson(directory);
@@ -159,6 +162,7 @@ test("NativeWind and starter setup replace the blank Expo scaffold", () => {
   assert.equal(packageJson.scripts["reset-project"], undefined);
   assert.equal(packageJson.scripts.check, "biome check .");
   assert.deepEqual(appJson.expo.platforms, ["ios", "android"]);
+  assert.equal(appJson.expo.scheme, "demo-app");
   assert.equal(appJson.expo.web, undefined);
   assert.deepEqual(appJson.expo.plugins, [
     "expo-router",

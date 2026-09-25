@@ -12,7 +12,7 @@ export const convexPackages = ["convex"];
 
 export const nativeWindPackages = [
   "nativewind@4.2.7",
-  "react-native-reanimated@~4.5.1",
+  "react-native-reanimated@4.5.1",
   "react-native-worklets@0.10.1",
   "react-native-safe-area-context@~5.7.0",
 ];
@@ -287,6 +287,11 @@ export function patchPackageJson(projectDirectory) {
 export function patchAppJson(projectDirectory) {
   const appPath = path.join(projectDirectory, "app.json");
   const appJson = JSON.parse(readFileSync(appPath, "utf8"));
+  if (!appJson.expo.scheme) {
+    const source = String(appJson.expo.slug ?? appJson.expo.name ?? "app").toLowerCase();
+    const normalized = source.replace(/[^a-z0-9+.-]+/g, "-").replace(/^-+|-+$/g, "");
+    appJson.expo.scheme = /^[a-z]/.test(normalized) ? normalized : `app-${normalized || "project"}`;
+  }
   appJson.expo.platforms = ["ios", "android"];
   const plugins = Array.isArray(appJson.expo.plugins) ? appJson.expo.plugins : [];
   if (
