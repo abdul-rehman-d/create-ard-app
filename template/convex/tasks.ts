@@ -16,18 +16,18 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const text = args.text.trim();
     if (!text) throw new Error("Task text is required.");
-    return await ctx.db.insert("tasks", { text, isCompleted: false });
+    return await ctx.db.insert("tasks", { text, is_completed: false });
   },
 });
 
 export const update = mutation({
   args: {
     id: v.id("tasks"),
-    isCompleted: v.boolean(),
+    is_completed: v.boolean(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.patch("tasks", args.id, { isCompleted: args.isCompleted });
+    await ctx.db.patch("tasks", args.id, { is_completed: args.is_completed });
     return null;
   },
 });

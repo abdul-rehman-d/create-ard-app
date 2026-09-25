@@ -4,6 +4,6 @@ import { v } from "convex/values";
 export default defineSchema({
   tasks: defineTable({
     text: v.string(),
-    isCompleted: v.boolean(),
+    is_completed: v.boolean(),
   }),
 });

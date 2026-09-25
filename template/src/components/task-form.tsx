@@ -49,6 +49,7 @@ export default function TaskForm() {
               >
                 {([canSubmit, isSubmitting, isPristine]) => (
                   <AppButton
+                    icon="add-circle-outline"
                     label="Add"
                     loading={isSubmitting}
                     disabled={!canSubmit || isPristine}

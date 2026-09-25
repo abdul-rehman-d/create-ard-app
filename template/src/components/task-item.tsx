@@ -16,10 +16,10 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function toggleTask(isCompleted: boolean) {
+  async function toggleTask(is_completed: boolean) {
     setError(null);
     try {
-      await updateTask({ id: task._id, isCompleted });
+      await updateTask({ id: task._id, is_completed });
     } catch {
       setError("Could not update this task.");
     }
@@ -41,18 +41,20 @@ export default function TaskItem({ task }: TaskItemProps) {
     <View className="gap-1 rounded-2xl border border-stone-200 bg-white p-4">
       <View className="flex-row items-center gap-3">
         <AppCheckbox
-          accessibilityLabel={`Mark ${task.text} as ${task.isCompleted ? "incomplete" : "complete"}`}
-          value={task.isCompleted}
+          accessibilityLabel={`Mark ${task.text} as ${task.is_completed ? "incomplete" : "complete"}`}
+          value={task.is_completed}
           onValueChange={(value) => void toggleTask(value)}
         />
         <Text
           className={`flex-1 text-base ${
-            task.isCompleted ? "text-stone-400 line-through" : "text-stone-900"
+            task.is_completed ? "text-stone-400 line-through" : "text-stone-900"
           }`}
         >
           {task.text}
         </Text>
         <AppButton
+          icon="trash-outline"
+          iconOnly
           label="Delete"
           variant="ghost"
           loading={isRemoving}

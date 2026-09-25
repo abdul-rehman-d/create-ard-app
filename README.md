@@ -1,49 +1,30 @@
 # create-expo-convex-app
 
-A personal, native-first Expo starter generator with Convex, NativeWind, TanStack Form, Expo UI, and Biome.
+Expo + Convex + NativeWind — a native-first app, ready in one command.
 
-## Use it
-
-From this repository:
+## Quick start
 
 ```sh
-npm install
-npm link
-create-expo-convex-app my-app
+pnpm dlx github:abdul-rehman-d/create-expo-convex-app my-app
 ```
 
-After publishing:
+Then start it:
 
 ```sh
-npx create-expo-convex-app@latest my-app
+cd my-app
+pnpm start
 ```
 
-The CLI detects the package manager that launched it. You can override that choice:
+You get an iOS and Android Expo Router app with Convex connected, NativeWind configured, and a clean task starter ready to run.
+
+## Useful flags
+
+- `--skip-convex` — configure Convex later
+- `--package-manager npm` — generate with a different package manager
+
+## Work on the CLI
 
 ```sh
-npx create-expo-convex-app@latest my-app --package-manager pnpm
-```
-
-Use `--skip-convex` when you want to defer the interactive `convex dev --once` step.
-
-## What it creates
-
-- The latest default `create-expo-app` project, reduced to iOS and Android.
-- A small Expo Router app under `src/app`.
-- A bounded Convex task query plus create, update, and remove mutations.
-- Reusable NativeWind button and text-input primitives.
-- A reusable Expo UI universal checkbox.
-- A TanStack Form-powered task form.
-- An offline screen driven by NetInfo.
-- Biome lint, format, and check scripts.
-
-The CLI does not overwrite the generated `package.json`. It installs with the selected package manager and then merges only the scripts it owns.
-
-## Development
-
-```sh
-npm run check
-npm run typecheck
-npm test
-npm pack --dry-run
+pnpm install
+pnpm verify
 ```

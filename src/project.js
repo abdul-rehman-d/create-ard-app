@@ -5,23 +5,51 @@ import { fileURLToPath } from "node:url";
 const PACKAGE_MANAGERS = new Set(["npm", "pnpm", "yarn", "bun"]);
 
 /** @typedef {"npm" | "pnpm" | "yarn" | "bun"} PackageManager */
-/** @typedef {"create" | "add" | "expo-install" | "expo-install-dev" | "remove" | "convex" | "biome"} CommandAction */
+/** @typedef {"create" | "add" | "expo-install" | "tailwind-init" | "remove" | "convex" | "biome"} CommandAction */
 /** @typedef {[string, string[]]} Command */
 
 export const convexPackages = ["convex"];
 
-export const expoPackages = [
-  "@react-native-async-storage/async-storage",
-  "@react-native-community/netinfo",
-  "react-native-safe-area-context",
-  "@expo/ui",
-  "@tanstack/react-form",
+export const nativeWindPackages = [
   "nativewind@4.2.7",
-  "react-native-reanimated",
-  "react-native-worklets",
+  "react-native-reanimated@~4.5.1",
+  "react-native-worklets@0.10.1",
+  "react-native-safe-area-context@~5.7.0",
 ];
 
-export const developmentPackages = ["@biomejs/biome@2.5.14", "tailwindcss@^3.4.17"];
+export const nativeWindDevelopmentPackages = [
+  "tailwindcss@^3.4.17",
+  "prettier-plugin-tailwindcss@^0.5.11",
+  "babel-preset-expo",
+];
+
+export const expoPackages = [
+  "expo-router",
+  "expo-linking",
+  "expo-constants",
+  "expo-font",
+  "expo-splash-screen",
+  "expo-status-bar",
+  "@expo/vector-icons",
+  "@react-native-async-storage/async-storage",
+  "@react-native-community/netinfo",
+  "@tanstack/react-form",
+  "react-native-gesture-handler",
+  "react-native-screens",
+];
+
+export const developmentPackages = ["@biomejs/biome@2.5.14"];
+
+export const generatedPackagesToRemove = [
+  "expo-device",
+  "expo-glass-effect",
+  "expo-image",
+  "expo-symbols",
+  "expo-system-ui",
+  "expo-web-browser",
+  "react-dom",
+  "react-native-web",
+];
 
 /** @returns {PackageManager} */
 export function detectPackageManager(userAgent = process.env.npm_config_user_agent ?? "") {
@@ -40,23 +68,67 @@ export function assertPackageManager(packageManager) {
  * @param {PackageManager} packageManager
  * @param {CommandAction} action
  * @param {string[]} values
+ * @param {boolean} dev
  * @returns {Command}
  */
-export function commandFor(packageManager, action, values = []) {
+export function commandFor(packageManager, action, values = [], dev = false) {
   assertPackageManager(packageManager);
 
   if (action === "create") {
     /** @type {Record<PackageManager, Command>} */
     const commands = {
-      npm: ["npx", ["--yes", "create-expo-app@latest", ...values, "--yes"]],
-      pnpm: ["pnpm", ["dlx", "create-expo-app@latest", ...values, "--yes"]],
-      yarn: ["yarn", ["dlx", "create-expo-app@latest", ...values, "--yes"]],
-      bun: ["bunx", ["create-expo-app@latest", ...values, "--yes"]],
+      npm: [
+        "npx",
+        [
+          "--yes",
+          "create-expo-app@latest",
+          ...values,
+          "--template",
+          "blank-typescript",
+          "--yes",
+          "--no-install",
+        ],
+      ],
+      pnpm: [
+        "pnpm",
+        [
+          "dlx",
+          "create-expo-app@latest",
+          ...values,
+          "--template",
+          "blank-typescript",
+          "--yes",
+          "--no-install",
+        ],
+      ],
+      yarn: [
+        "yarn",
+        [
+          "dlx",
+          "create-expo-app@latest",
+          ...values,
+          "--template",
+          "blank-typescript",
+          "--yes",
+          "--no-install",
+        ],
+      ],
+      bun: [
+        "bunx",
+        [
+          "create-expo-app@latest",
+          ...values,
+          "--template",
+          "blank-typescript",
+          "--yes",
+          "--no-install",
+        ],
+      ],
     };
     return commands[packageManager];
   }
 
-  if (action === "expo-install" || action === "expo-install-dev") {
+  if (action === "expo-install") {
     /** @type {Record<PackageManager, Command>} */
     const expoCommands = {
       npm: ["npx", ["expo"]],
@@ -65,17 +137,30 @@ export function commandFor(packageManager, action, values = []) {
       bun: ["bunx", ["expo"]],
     };
     const expoPrefix = expoCommands[packageManager];
-    const devFlag = action === "expo-install-dev" ? ["--dev"] : [];
+    const devFlag = dev ? ["--dev"] : [];
     return [expoPrefix[0], [...expoPrefix[1], "install", ...devFlag, ...values]];
   }
 
   if (action === "add") {
+    const allowBuild =
+      packageManager === "pnpm" && values.includes("convex") ? ["--allow-build=esbuild"] : [];
     /** @type {Record<PackageManager, Command>} */
     const commands = {
-      npm: ["npm", ["install", ...values]],
-      pnpm: ["pnpm", ["--allow-build=esbuild", "add", ...values]],
-      yarn: ["yarn", ["add", ...values]],
-      bun: ["bun", ["add", ...values]],
+      npm: ["npm", ["install", ...(dev ? ["--save-dev"] : []), ...values]],
+      pnpm: ["pnpm", ["add", ...(dev ? ["--save-dev"] : []), ...values, ...allowBuild]],
+      yarn: ["yarn", ["add", ...(dev ? ["--dev"] : []), ...values]],
+      bun: ["bun", ["add", ...(dev ? ["--dev"] : []), ...values]],
+    };
+    return commands[packageManager];
+  }
+
+  if (action === "tailwind-init") {
+    /** @type {Record<PackageManager, Command>} */
+    const commands = {
+      npm: ["npx", ["tailwindcss", "init"]],
+      pnpm: ["pnpm", ["exec", "tailwindcss", "init"]],
+      yarn: ["yarn", ["tailwindcss", "init"]],
+      bun: ["bunx", ["tailwindcss", "init"]],
     };
     return commands[packageManager];
   }
@@ -132,7 +217,16 @@ export function ensureAvailableTarget(targetDirectory) {
 
 /** @param {string} projectDirectory */
 export function applyTemplate(projectDirectory) {
-  for (const generatedPath of ["app", "src", "components", "constants", "hooks", "scripts"]) {
+  for (const generatedPath of [
+    "App.tsx",
+    "index.ts",
+    "app",
+    "src",
+    "components",
+    "constants",
+    "hooks",
+    "scripts",
+  ]) {
     rmSync(path.join(projectDirectory, generatedPath), { recursive: true, force: true });
   }
 
@@ -146,10 +240,31 @@ export function applyTemplate(projectDirectory) {
 }
 
 /** @param {string} projectDirectory */
+export function setupNativeWind(projectDirectory) {
+  const sourceDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../template");
+  for (const file of [
+    "babel.config.js",
+    "global.css",
+    "metro.config.js",
+    "nativewind-env.d.ts",
+    "tailwind.config.js",
+    "tsconfig.json",
+  ]) {
+    cpSync(path.join(sourceDirectory, file), path.join(projectDirectory, file), { force: true });
+  }
+
+  const appPath = path.join(projectDirectory, "app.json");
+  const appJson = JSON.parse(readFileSync(appPath, "utf8"));
+  appJson.expo.web = { ...appJson.expo.web, bundler: "metro" };
+  writeFileSync(appPath, `${JSON.stringify(appJson, null, 2)}\n`);
+}
+
+/** @param {string} projectDirectory */
 export function patchPackageJson(projectDirectory) {
   const packagePath = path.join(projectDirectory, "package.json");
   const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 
+  packageJson.main = "expo-router/entry";
   packageJson.scripts = {
     ...packageJson.scripts,
     start: "expo start",
@@ -173,12 +288,16 @@ export function patchAppJson(projectDirectory) {
   const appPath = path.join(projectDirectory, "app.json");
   const appJson = JSON.parse(readFileSync(appPath, "utf8"));
   appJson.expo.platforms = ["ios", "android"];
-  if (Array.isArray(appJson.expo.plugins)) {
-    appJson.expo.plugins = appJson.expo.plugins.filter((/** @type {unknown} */ plugin) => {
+  const plugins = Array.isArray(appJson.expo.plugins) ? appJson.expo.plugins : [];
+  if (
+    !plugins.some((/** @type {unknown} */ plugin) => {
       const name = Array.isArray(plugin) ? plugin[0] : plugin;
-      return name !== "expo-splash-screen";
-    });
+      return name === "expo-router";
+    })
+  ) {
+    plugins.unshift("expo-router");
   }
+  appJson.expo.plugins = plugins;
   delete appJson.expo.web;
   writeFileSync(appPath, `${JSON.stringify(appJson, null, 2)}\n`);
 }

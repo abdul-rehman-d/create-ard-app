@@ -1,9 +1,8 @@
-import { Checkbox, Host } from "@expo/ui";
-import { View, type ViewProps } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable, type PressableProps } from "react-native";
 
-type AppCheckboxProps = ViewProps & {
+type AppCheckboxProps = Omit<PressableProps, "onPress"> & {
   value: boolean;
-  disabled?: boolean;
   onValueChange: (value: boolean) => void;
 };
 
@@ -15,16 +14,20 @@ export default function AppCheckbox({
   ...props
 }: AppCheckboxProps) {
   return (
-    <View
-      accessible
+    <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: value, disabled }}
+      accessibilityState={{ checked: value, disabled: Boolean(disabled) }}
       className={`h-8 w-8 items-center justify-center ${className ?? ""}`}
+      disabled={disabled}
+      hitSlop={8}
+      onPress={() => onValueChange(!value)}
       {...props}
     >
-      <Host matchContents>
-        <Checkbox disabled={disabled} value={value} onValueChange={onValueChange} />
-      </Host>
-    </View>
+      <Ionicons
+        name={value ? "checkbox" : "square-outline"}
+        size={26}
+        color={disabled ? "#a8a29e" : "#1c1917"}
+      />
+    </Pressable>
   );
 }

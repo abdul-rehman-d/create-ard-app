@@ -13,8 +13,12 @@ import {
   developmentPackages,
   ensureAvailableTarget,
   expoPackages,
+  generatedPackagesToRemove,
+  nativeWindDevelopmentPackages,
+  nativeWindPackages,
   patchAppJson,
   patchPackageJson,
+  setupNativeWind,
 } from "./project.js";
 
 const packagePath = fileURLToPath(new URL("../package.json", import.meta.url));
@@ -125,6 +129,26 @@ export async function main(argv = process.argv.slice(2)) {
   const [createCommand, createArgs] = commandFor(packageManager, "create", [projectDirectory]);
   run(createCommand, createArgs, process.cwd());
 
+  if (packageManager === "pnpm") {
+    run("pnpm", ["config", "set", "--location=project", "nodeLinker", "hoisted"], projectDirectory);
+  }
+
+  console.log("\nSetting up NativeWind...\n");
+  const [nativeWindCommand, nativeWindArgs] = commandFor(packageManager, "add", nativeWindPackages);
+  run(nativeWindCommand, nativeWindArgs, projectDirectory);
+
+  const [nativeWindDevCommand, nativeWindDevArgs] = commandFor(
+    packageManager,
+    "add",
+    nativeWindDevelopmentPackages,
+    true,
+  );
+  run(nativeWindDevCommand, nativeWindDevArgs, projectDirectory);
+
+  const [tailwindCommand, tailwindArgs] = commandFor(packageManager, "tailwind-init");
+  run(tailwindCommand, tailwindArgs, projectDirectory);
+  setupNativeWind(projectDirectory);
+
   console.log("\nInstalling the Expo app dependencies...\n");
   const [expoInstallCommand, expoInstallArgs] = commandFor(
     packageManager,
@@ -132,6 +156,10 @@ export async function main(argv = process.argv.slice(2)) {
     expoPackages,
   );
   run(expoInstallCommand, expoInstallArgs, projectDirectory);
+
+  console.log("\nInstalling the development tools...\n");
+  const [devCommand, devArgs] = commandFor(packageManager, "add", developmentPackages, true);
+  run(devCommand, devArgs, projectDirectory);
 
   console.log("\nInstalling Convex...\n");
   const [convexInstallCommand, convexInstallArgs] = commandFor(
@@ -141,9 +169,6 @@ export async function main(argv = process.argv.slice(2)) {
   );
   run(convexInstallCommand, convexInstallArgs, projectDirectory);
 
-  const [devCommand, devArgs] = commandFor(packageManager, "expo-install-dev", developmentPackages);
-  run(devCommand, devArgs, projectDirectory);
-
   if (!options.skipConvex) {
     console.log("\nConnect this app to a Convex project when prompted.\n");
     const [convexCommand, convexArgs] = commandFor(packageManager, "convex");
@@ -151,19 +176,6 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   const packageJson = JSON.parse(readFileSync(path.join(projectDirectory, "package.json"), "utf8"));
-  const generatedPackagesToRemove = [
-    "expo-device",
-    "expo-font",
-    "expo-glass-effect",
-    "expo-image",
-    "expo-splash-screen",
-    "expo-status-bar",
-    "expo-symbols",
-    "expo-system-ui",
-    "expo-web-browser",
-    "react-dom",
-    "react-native-web",
-  ];
   const removablePackages = generatedPackagesToRemove.filter(
     (name) => packageJson.dependencies?.[name] || packageJson.devDependencies?.[name],
   );

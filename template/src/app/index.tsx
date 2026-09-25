@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback } from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,7 +12,7 @@ function OfflineScreen() {
   return (
     <SafeAreaView className="flex-1 items-center justify-center bg-stone-50 px-8">
       <View className="max-w-sm items-center gap-3 rounded-3xl border border-stone-200 bg-white p-8">
-        <Text className="text-4xl">📡</Text>
+        <Ionicons name="cloud-offline-outline" size={44} color="#57534e" />
         <Text className="text-center text-xl font-semibold text-stone-950">You are offline</Text>
         <Text className="text-center leading-6 text-stone-500">
           Reconnect to the internet and your tasks will appear automatically.
@@ -46,10 +47,7 @@ export default function Index() {
   return (
     <SafeAreaView className="flex-1 bg-stone-50" edges={["top", "left", "right"]}>
       <View className="border-b border-stone-200 px-6 pb-5 pt-4">
-        <Text className="text-sm font-medium uppercase tracking-widest text-stone-500">
-          Expo + Convex
-        </Text>
-        <Text className="mt-1 text-3xl font-bold text-stone-950">Tasks</Text>
+        <Text className="text-3xl font-bold text-stone-950">Tasks</Text>
       </View>
 
       <FlatList
