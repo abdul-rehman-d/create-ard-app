@@ -2,6 +2,10 @@
 
 Expo + Convex + NativeWind — a native-first app, ready in one command.
 
+## Demo
+
+[Watch the CLI demo](./assets/cli-demo.mp4)
+
 ## Quick start
 
 ```sh
